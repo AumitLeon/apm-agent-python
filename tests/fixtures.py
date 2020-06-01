@@ -228,6 +228,7 @@ class DummyTransport(HTTPTransportBase):
     def __init__(self, url, *args, **kwargs):
         super(DummyTransport, self).__init__(url, *args, **kwargs)
         self.events = defaultdict(list)
+        self.config = {}
 
     def queue(self, event_type, data, flush=False):
         self._flushed.clear()

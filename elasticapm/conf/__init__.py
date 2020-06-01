@@ -286,6 +286,10 @@ class Config(_ConfigBase):
             "elasticapm.processors.sanitize_http_request_body",
         ],
     )
+    sanitize_field_names = _ListConfigValue(
+        "SANITIZE_FIELD_NAMES",
+        default=["authorization", "password", "secret", "passwd", "token", "api_key", "access_token", "sessionid"],
+    )
     metrics_sets = _ListConfigValue(
         "METRICS_SETS",
         default=[

@@ -46,6 +46,7 @@ import elasticapm
 from elasticapm.conf import Config, VersionedConfig, constants
 from elasticapm.conf.constants import ERROR
 from elasticapm.metrics.base_metrics import MetricsRegistry
+from elasticapm.processors import Processors
 from elasticapm.traces import Tracer, execution_context
 from elasticapm.utils import cgroup, compat, is_master_process, stacks, varmap
 from elasticapm.utils.encoding import enforce_label_format, keyword_field, shorten, transform
@@ -131,13 +132,14 @@ class Client(object):
             "User-Agent": "elasticapm-python/%s" % elasticapm.VERSION,
         }
 
+        client = Processors(self.config.sanitize_field_names)
         transport_kwargs = {
             "metadata": self._build_metadata(),
             "headers": headers,
             "verify_server_cert": self.config.verify_server_cert,
             "server_cert": self.config.server_cert,
             "timeout": self.config.server_timeout,
-            "processors": self.load_processors(),
+            "processors": self.load_processors(client),
         }
         self._api_endpoint_url = compat.urlparse.urljoin(
             self.config.server_url if self.config.server_url.endswith("/") else self.config.server_url + "/",
@@ -518,14 +520,14 @@ class Client(object):
             locals_processor_func=locals_processor_func,
         )
 
-    def load_processors(self):
+    def load_processors(self, client):
         """
         Loads processors from self.config.processors, as well as constants.HARDCODED_PROCESSORS.
         Duplicate processors (based on the path) will be discarded.
 
         :return: a list of callables
         """
-        processors = itertools.chain(self.config.processors, constants.HARDCODED_PROCESSORS)
+        processors = itertools.chain(client.get_processors(), [client.add_context_lines_to_frames])
         seen = {}
         # setdefault has the nice property that it returns the value that it just set on the dict
         return [seen.setdefault(path, import_string(path)) for path in processors if path not in seen]

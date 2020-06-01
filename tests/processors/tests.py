@@ -57,6 +57,7 @@ def http_test_data():
                     "the_secret": "hello",
                     "a_password_here": "hello",
                     "authorization": "bearer xyz",
+                    "sensitive-header": "sensitive-value",
                 },
                 "cookies": {
                     "foo": "bar",
@@ -185,6 +186,7 @@ def test_sanitize_http_headers(http_test_data):
         "the_secret": processors.MASK,
         "a_password_here": processors.MASK,
         "authorization": processors.MASK,
+        "sensitive-header": processors.MASK,
     }
     assert result["context"]["request"]["headers"] == expected
     assert result["context"]["response"]["headers"] == expected
