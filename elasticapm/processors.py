@@ -117,7 +117,7 @@ def sanitize_http_request_cookies(client, event):
     # sanitize request.cookies dict
     try:
         cookies = event["context"]["request"]["cookies"]
-        event["context"]["request"]["cookies"] = varmap(_sanitize, cookies)
+        event["context"]["request"]["cookies"] = varmap(_sanitize, cookies, sanitize_field_names=client.config.sanitize_field_names)
     except (KeyError, TypeError):
         pass
 
@@ -158,14 +158,14 @@ def sanitize_http_headers(client, event):
     # request headers
     try:
         headers = event["context"]["request"]["headers"]
-        event["context"]["request"]["headers"] = varmap(_sanitize, headers)
+        event["context"]["request"]["headers"] = varmap(_sanitize, headers, sanitize_field_names=client.config.sanitize_field_names)
     except (KeyError, TypeError):
         pass
 
     # response headers
     try:
         headers = event["context"]["response"]["headers"]
-        event["context"]["response"]["headers"] = varmap(_sanitize, headers)
+        event["context"]["response"]["headers"] = varmap(_sanitize, headers, sanitize_field_names=client.config.sanitize_field_names)
     except (KeyError, TypeError):
         pass
 
@@ -183,7 +183,7 @@ def sanitize_http_wsgi_env(client, event):
     """
     try:
         env = event["context"]["request"]["env"]
-        event["context"]["request"]["env"] = varmap(_sanitize, env)
+        event["context"]["request"]["env"] = varmap(_sanitize, env, sanitize_field_names=client.config.sanitize_field_names)
     except (KeyError, TypeError):
         pass
     return event
@@ -267,7 +267,12 @@ def mark_in_app_frames(client, event):
     return event
 
 
-def _sanitize(key, value):
+def _sanitize(key, value, **kwargs):
+    if kwargs:
+        sanitize_field_names = kwargs['sanitize_field_names']
+    else:
+        sanitize_field_names = SANITIZE_FIELD_NAMES
+
     if value is None:
         return
 
@@ -283,7 +288,7 @@ def _sanitize(key, value):
         return value
 
     key = key.lower()
-    for field in SANITIZE_FIELD_NAMES:
+    for field in sanitize_field_names:
         if field in key:
             # store mask as a fixed length for security
             return MASK

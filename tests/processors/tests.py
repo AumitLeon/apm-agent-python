@@ -144,12 +144,12 @@ def test_remove_http_request_body(http_test_data):
     assert "body" not in result["context"]["request"]
 
 
-def test_sanitize_http_request_cookies(http_test_data):
+def test_sanitize_http_request_cookies(elasticapm_client, http_test_data):
     http_test_data["context"]["request"]["headers"][
         "cookie"
     ] = "foo=bar; password=12345; the_secret=12345; csrftoken=abc"
 
-    result = processors.sanitize_http_request_cookies(None, http_test_data)
+    result = processors.sanitize_http_request_cookies(elasticapm_client, http_test_data)
 
     assert result["context"]["request"]["cookies"] == {
         "foo": "bar",
@@ -164,12 +164,12 @@ def test_sanitize_http_request_cookies(http_test_data):
     ] == "foo=bar; password={0}; the_secret={0}; csrftoken={0}".format(processors.MASK)
 
 
-def test_sanitize_http_response_cookies(http_test_data):
+def test_sanitize_http_response_cookies(elasticapm_client, http_test_data):
     http_test_data["context"]["response"]["headers"][
         "set-cookie"
     ] = "foo=bar; httponly; secure ; sessionid=bar; httponly; secure"
 
-    result = processors.sanitize_http_response_cookies(None, http_test_data)
+    result = processors.sanitize_http_response_cookies(elasticapm_client, http_test_data)
 
     assert (
         result["context"]["response"]["headers"]["set-cookie"]
@@ -177,8 +177,8 @@ def test_sanitize_http_response_cookies(http_test_data):
     )
 
 
-def test_sanitize_http_headers(http_test_data):
-    result = processors.sanitize_http_headers(None, http_test_data)
+def test_sanitize_http_headers(elasticapm_client, http_test_data):
+    result = processors.sanitize_http_headers(elasticapm_client, http_test_data)
     expected = {
         "foo": "bar",
         "password": processors.MASK,
@@ -190,8 +190,8 @@ def test_sanitize_http_headers(http_test_data):
     assert result["context"]["response"]["headers"] == expected
 
 
-def test_sanitize_http_wgi_env(http_test_data):
-    result = processors.sanitize_http_wsgi_env(None, http_test_data)
+def test_sanitize_http_wgi_env(elasticapm_client, http_test_data):
+    result = processors.sanitize_http_wsgi_env(elasticapm_client, http_test_data)
 
     assert result["context"]["request"]["env"] == {
         "foo": "bar",
@@ -201,8 +201,8 @@ def test_sanitize_http_wgi_env(http_test_data):
     }
 
 
-def test_sanitize_http_query_string(http_test_data):
-    result = processors.sanitize_http_request_querystring(None, http_test_data)
+def test_sanitize_http_query_string(elasticapm_client, http_test_data):
+    result = processors.sanitize_http_request_querystring(elasticapm_client, http_test_data)
 
     expected = "foo=bar&password={0}&the_secret={0}&cc={0}".format(processors.MASK)
     assert result["context"]["request"]["url"]["search"] == expected
